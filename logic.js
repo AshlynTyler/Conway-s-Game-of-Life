@@ -10,6 +10,26 @@ function Cell(x,y){
     this.alive = false;
 
     this.marked = false;
+    
+    this.neighbors = [];
+
+    this.findNeighbors = function(){
+        
+    }
+
+    this.die = function(){
+        this.alive = false;
+
+        aliveCells.splice(aliveCells.lastIndexOf(this),1)
+    }
+
+    this.born = function(){
+        this.alive = true;
+
+        aliveCells.push(this)
+    }
+
+    this.get
 
     //checks to see if cell should be alive or dead next generation based on the cells around it and marks them accordingly.
     this.check = function(){
@@ -26,8 +46,6 @@ function Cell(x,y){
                 }
             }
         }
-
-        console.log(cellCount)
         if((cellCount < 2 || cellCount > 3) && this.alive === true){
             this.marked = true;
         }
@@ -35,8 +53,6 @@ function Cell(x,y){
         if(cellCount === 3 && this.alive === false){
             this.marked = true;
         }
-
-        console.log(this.marked)
     }
 
     //Checks to see if a cell is marked and then switches its state and unmarks it if it is.
@@ -45,10 +61,10 @@ function Cell(x,y){
             
             
             if(this.alive === true){
-                this.alive = false;
+                this.die()
             }
             else{
-                this.alive = true;
+                this.born();
             }
             this.marked = false;
         }
@@ -56,6 +72,8 @@ function Cell(x,y){
 }
 
 var cells = [];
+
+var aliveCells = [];
 
 var boardWidth = 80;
 
@@ -157,23 +175,21 @@ var rainbow = ["#ff0000","#ff8800","#ffff00","#00ff00","#0088ff","#ff00ff"]
 function renderBoard(){
     draw.clearRect(0,0,canvasWidth,canvasHeight)
 
-    for(i = 0; i < boardHeight; i++)
+    for(i = 0; i < aliveCells.length; i++)
     {   
-        
-        draw.fillStyle = rainbow[i % rainbow.length]
+        var thisCell = aliveCells[i]
 
-        for(j = 0; j < boardWidth; j++){
-            var thisCell = cells[j][i]
+        draw.fillStyle = rainbow[thisCell.y % rainbow.length]
 
-            if(thisCell.alive === true){
-                draw.fillRect(
-                    (thisCell.x) * cellSize,
-                    (thisCell.y) * cellSize,
-                    cellSize,
-                    cellSize
-                )
-            }
+        if(thisCell.alive === true){
+            draw.fillRect(
+                (thisCell.x) * cellSize,
+                (thisCell.y) * cellSize,
+                cellSize,
+                cellSize
+            )
         }
+        
     }
 }
 
@@ -196,11 +212,9 @@ canvasOverlay.addEventListener("click", function (evt) {
         var selectCell = cells[selectx][selecty]
 
         if(selectCell.alive === false)
-            selectCell.alive = true;
+            selectCell.born();
         else
-            selectCell.alive = false;
-
-        console.log(selectCell)
+            selectCell.die();
 
         renderBoard();
     }
