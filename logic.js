@@ -46,26 +46,142 @@ function Cell(x,y){
 
 var cells = [];
 
-var gridWidth = 100;
+var boardWidth = 100;
 
-var gridHeight = 100;
+var boardHeight = 100;
 
-var cellSize = 10;
+var canvasWidth = 1200;
 
-//creates or resets the cell grid.
-function remakeGrid(){
+var canvasHeight = 675;
+
+var cellSize = 30;
+
+var canvas = document.getElementById("game-canvas")
+
+var canvasGrid = document.getElementById("grid-canvas")
+
+var canvasOverlay = document.getElementById("overlay-canvas")
+
+var draw = canvas.getContext("2d");
+
+var drawGrid = canvasGrid.getContext("2d")
+
+var drawOverlay = canvasOverlay.getContext("2d")
+
+var scale = 1;
+
+draw.translate(.5,.5);
+
+drawGrid.translate(canvasWidth/2 + .5,canvasHeight/2 + .5);
+
+drawOverlay.translate(.5,.5);
+
+//creates or resets the cell board.
+function remakeBoard(){
     cells = [];
 
-    for (i = 0; i <= gridWidth; i++){
+    for (i = 0; i < boardWidth; i++){
         cells[i] = [];
 
         var row = cells[i];
 
-        for(j = 0; j <= gridHeight; j++){
+        for(j = 0; j < boardHeight; j++){
             row[j] = new Cell(i,j);
         }
     }
 }
 
-remakeGrid();
+remakeBoard();
 
+console.log(cells)
+
+function renderGrid(){
+    drawGrid.clearRect(
+        -canvasWidth/2 * scale,
+        - canvasHeight/2 * scale,
+        canvasWidth * scale,
+        canvasHeight * scale)
+
+    drawGrid.lineWidth = 1
+
+    drawGrid.strokeStyle = "#113322";
+
+    drawGrid.beginPath();
+
+    for(i = -canvasWidth/2; i <= canvasWidth/2; i += cellSize){
+        drawGrid.moveTo(i, -canvasHeight/2);
+
+        drawGrid.lineTo(i, canvasHeight/2);
+    }
+
+    for(i = -canvasHeight/2; i <= canvasHeight/2; i += cellSize){
+        drawGrid.moveTo(-canvasWidth/2, i)
+
+        drawGrid.lineTo(canvasWidth/2, i)
+    }
+
+    drawGrid.stroke();
+}
+
+renderGrid();
+
+function renderOverlay(){
+    
+    drawOverlay.strokeStyle = "#337722"
+
+    drawOverlay.strokeRect(0,0,canvasWidth - 1,canvasHeight -1)
+}
+
+renderOverlay();
+
+//make colors for rainbow pattern.
+var rainbow = ["#ff0000","#ff8800","#ffff00","#00ff00","#0088ff","#ff00ff"]
+
+function renderBoard(){
+    draw.clearRect(0,0,canvasWidth,canvasHeight)
+
+    for(i = 0; i < boardHeight; i++)
+    {   
+        
+        draw.fillStyle = rainbow[i % rainbow.length]
+
+        for(j = 0; j < boardWidth; j++){
+            thisCell = cells[j][i]
+
+            if(thisCell.alive === true){
+                draw.fillRect(
+                    (thisCell.x- boardWidth/2) * cellSize,
+                    (thisCell.y- boardHeight/2) * cellSize,
+                    cellSize,
+                    cellSize
+                )
+            }
+        }
+    }
+}
+
+function getMousePos(can, evt) {
+    var rect = can.getBoundingClientRect();
+    return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
+}
+
+canvasOverlay.addEventListener("click", function (evt) {
+    var mousePos = getMousePos(canvas, evt);
+    
+    var selectx = Math.floor(mousePos.x/cellSize + boardWidth/2)
+    var selecty = Math.floor(mousePos.y/cellSize + boardHeight/2)
+
+    var selectCell = cells[selectx][selecty]
+
+    if(selectCell.alive === false)
+        selectCell.alive = true;
+    else
+        selectCell.alive = false;
+
+    console.log(selectCell)
+
+    renderBoard();
+}, false);
