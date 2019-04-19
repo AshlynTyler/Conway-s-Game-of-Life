@@ -28,6 +28,8 @@ body{
     height: 675px;
 
     cursor: pointer;
+
+    margin-bottom: 30px;
 }
 
 .canvas-group{
@@ -44,4 +46,16 @@ h1{
 
 #overlay-canvas{
     z-index: 10;
+}
+
+.button{
+    
+    background: #66ff00;
+    color: #ffffff;
+
+    border-radius: 5px;
+
+    padding: 10px;
+
+    cursor: pointer;
 }

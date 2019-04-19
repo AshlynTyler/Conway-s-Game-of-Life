@@ -15,40 +15,51 @@ function Cell(x,y){
     this.check = function(){
         var cellCount = 0;
 
-        for(i = -1; i < 2; i++){
-            for(j = -1; j < 2; j++){
-                if(cells[this.x + i][this.x + j] !== undefined){
-                    if(cells[this.x + i][this.y + j] !== this && cells[this.x + i][this.x + j].alive === true)
+        for(var i = -1; i < 2; i++){
+            for(var j = -1; j < 2; j++){
+                if(this.x + i >= 0 && this.y + j >=0 && this.x+i < boardWidth &&this.y + j < boardHeight){
+
+                    if(cells[this.x + i][this.y + j] !== this && cells[this.x + i][this.y + j].alive === true){
                         cellCount++
+                    }
+                    
                 }
             }
         }
 
-        if((cellCount < 2 || cellCount > 3) && this.alive === true)
+        console.log(cellCount)
+        if((cellCount < 2 || cellCount > 3) && this.alive === true){
             this.marked = true;
+        }
 
-        if(cellCount === 3 && this.alive === false)
+        if(cellCount === 3 && this.alive === false){
             this.marked = true;
+        }
+
+        console.log(this.marked)
     }
 
     //Checks to see if a cell is marked and then switches its state and unmarks it if it is.
     this.update = function(){
-        if(this.marked === true){
-            if(this.alive === true)
-                this.alive === false
-            else
-                this.alive === true
-
-            this.marked === false;
+        if(this.marked){
+            
+            
+            if(this.alive === true){
+                this.alive = false;
+            }
+            else{
+                this.alive = true;
+            }
+            this.marked = false;
         }
     }
 }
 
 var cells = [];
 
-var boardWidth = 100;
+var boardWidth = 80;
 
-var boardHeight = 100;
+var boardHeight = 80;
 
 var canvasWidth = 1200;
 
@@ -70,9 +81,15 @@ var drawOverlay = canvasOverlay.getContext("2d")
 
 var scale = 1;
 
+var timePerGen = 100;
+
+var gameInterval;
+
+var isPlaying = false;
+
 draw.translate(.5,.5);
 
-drawGrid.translate(canvasWidth/2 + .5,canvasHeight/2 + .5);
+drawGrid.translate(.5,.5);
 
 drawOverlay.translate(.5,.5);
 
@@ -97,8 +114,8 @@ console.log(cells)
 
 function renderGrid(){
     drawGrid.clearRect(
-        -canvasWidth/2 * scale,
-        - canvasHeight/2 * scale,
+        0,
+        0,
         canvasWidth * scale,
         canvasHeight * scale)
 
@@ -108,16 +125,16 @@ function renderGrid(){
 
     drawGrid.beginPath();
 
-    for(i = -canvasWidth/2; i <= canvasWidth/2; i += cellSize){
-        drawGrid.moveTo(i, -canvasHeight/2);
+    for(i = 0; i <= canvasWidth; i += cellSize){
+        drawGrid.moveTo(i, 0);
 
-        drawGrid.lineTo(i, canvasHeight/2);
+        drawGrid.lineTo(i, canvasHeight);
     }
 
-    for(i = -canvasHeight/2; i <= canvasHeight/2; i += cellSize){
-        drawGrid.moveTo(-canvasWidth/2, i)
+    for(i = 0; i <= canvasHeight; i += cellSize){
+        drawGrid.moveTo(0, i)
 
-        drawGrid.lineTo(canvasWidth/2, i)
+        drawGrid.lineTo(canvasWidth, i)
     }
 
     drawGrid.stroke();
@@ -146,12 +163,12 @@ function renderBoard(){
         draw.fillStyle = rainbow[i % rainbow.length]
 
         for(j = 0; j < boardWidth; j++){
-            thisCell = cells[j][i]
+            var thisCell = cells[j][i]
 
             if(thisCell.alive === true){
                 draw.fillRect(
-                    (thisCell.x- boardWidth/2) * cellSize,
-                    (thisCell.y- boardHeight/2) * cellSize,
+                    (thisCell.x) * cellSize,
+                    (thisCell.y) * cellSize,
                     cellSize,
                     cellSize
                 )
@@ -168,20 +185,70 @@ function getMousePos(can, evt) {
     };
 }
 
+//click event for canvas to add and remove live cells.
 canvasOverlay.addEventListener("click", function (evt) {
-    var mousePos = getMousePos(canvas, evt);
-    
-    var selectx = Math.floor(mousePos.x/cellSize + boardWidth/2)
-    var selecty = Math.floor(mousePos.y/cellSize + boardHeight/2)
+    if(!isPlaying){
+        var mousePos = getMousePos(canvas, evt);
+        
+        var selectx = Math.floor(mousePos.x/cellSize)
+        var selecty = Math.floor(mousePos.y/cellSize)
 
-    var selectCell = cells[selectx][selecty]
+        var selectCell = cells[selectx][selecty]
 
-    if(selectCell.alive === false)
-        selectCell.alive = true;
-    else
-        selectCell.alive = false;
+        if(selectCell.alive === false)
+            selectCell.alive = true;
+        else
+            selectCell.alive = false;
 
-    console.log(selectCell)
+        console.log(selectCell)
+
+        renderBoard();
+    }
+}, false);
+
+//click event to play/pause the game.
+$("#play-button").click(function(){
+    if(!isPlaying){
+        var button = $("#play-button")
+
+        button.css("background","#ff0066")
+
+        button.text("Pause")
+
+        gameInterval = setInterval(function(){
+            newGeneration();
+        },timePerGen)
+
+        isPlaying = true;
+    }
+    else{
+        var button = $("#play-button")
+
+        button.css("background","#66ff00")
+
+        button.text("Play")
+
+        clearInterval(gameInterval);
+
+        isPlaying = false;
+    }
+})
+
+//function for a new generation of cells
+function newGeneration(){
+
+
+    for(var k = 0; k < boardWidth; k++){
+        for(var l = 0; l < boardHeight; l++){
+            cells[k][l].check();
+        }
+    }
+
+    for(var k = 0; k < boardWidth; k++){
+        for(var l = 0; l < boardHeight; l++){
+            cells[k][l].update();
+        }
+    }
 
     renderBoard();
-}, false);
+}
