@@ -13,52 +13,79 @@ function Cell(x,y){
     
     this.neighbors = [];
 
+    this.cellCount = 0;
+
     this.findNeighbors = function(){
         
+        for(var i = -1; i < 2; i++){
+            for(var j = -1; j < 2; j++){
+                if(this.x + i >= 0 && this.y + j >=0 && this.x+i < boardWidth &&this.y + j < boardHeight){
+
+                    if(cells[this.x + i][this.y + j] !== this){
+                        this.neighbors.push(cells[this.x + i][this.y + j])
+                    }
+                    
+                }
+            }
+        }
     }
 
     this.die = function(){
         this.alive = false;
 
         aliveCells.splice(aliveCells.lastIndexOf(this),1)
+
+        for(var i = 0; i < this.neighbors.length; i ++){
+            this.neighbors[i].cellCount -= 1;
+
+            this.neighbors[i].check()
+        }
+
+        this.check()
     }
 
     this.born = function(){
         this.alive = true;
 
         aliveCells.push(this)
+
+        for(var i = 0; i < this.neighbors.length; i ++){
+            this.neighbors[i].cellCount += 1;
+
+            this.neighbors[i].check()
+        }
+
+        this.check()
     }
 
-    this.get
+    this.mark = function(){
+        this.marked = true;
+
+        markedCells.push(this);
+    }
+
+    this.unmark = function(){
+        this.marked = false;
+        markedCells.splice(markedCells.lastIndexOf(this),1)
+    }
 
     //checks to see if cell should be alive or dead next generation based on the cells around it and marks them accordingly.
     this.check = function(){
-        var cellCount = 0;
-
-        for(var i = -1; i < 2; i++){
-            for(var j = -1; j < 2; j++){
-                if(this.x + i >= 0 && this.y + j >=0 && this.x+i < boardWidth &&this.y + j < boardHeight){
-
-                    if(cells[this.x + i][this.y + j] !== this && cells[this.x + i][this.y + j].alive === true){
-                        cellCount++
-                    }
-                    
-                }
-            }
-        }
-        if((cellCount < 2 || cellCount > 3) && this.alive === true){
-            this.marked = true;
+        if(this.marked){
+            this.unmark();
         }
 
-        if(cellCount === 3 && this.alive === false){
-            this.marked = true;
+        if((this.cellCount < 2 || this.cellCount > 3) && this.alive === true){
+            this.mark();
+        }
+
+        if(this.cellCount === 3 && this.alive === false){
+            this.mark();
         }
     }
 
     //Checks to see if a cell is marked and then switches its state and unmarks it if it is.
     this.update = function(){
-        if(this.marked){
-            
             
             if(this.alive === true){
                 this.die()
@@ -66,8 +93,6 @@ function Cell(x,y){
             else{
                 this.born();
             }
-            this.marked = false;
-        }
     }
 }
 
@@ -75,9 +100,15 @@ var cells = [];
 
 var aliveCells = [];
 
-var boardWidth = 80;
+var markedCells = [];
 
-var boardHeight = 80;
+var boardWidth = 100;
+
+var boardHeight =100;
+
+var xoffset = Math.floor(boardWidth /10)
+
+var yoffset = Math.floor(boardHeight/10)
 
 var canvasWidth = 1200;
 
@@ -124,6 +155,14 @@ function remakeBoard(){
             row[j] = new Cell(i,j);
         }
     }
+
+    for (i = 0; i < boardWidth; i++){
+
+        for(j = 0; j < boardHeight; j++){
+            cells[i][j].findNeighbors();
+        }
+    }
+
 }
 
 remakeBoard();
@@ -144,18 +183,39 @@ function renderGrid(){
     drawGrid.beginPath();
 
     for(i = 0; i <= canvasWidth; i += cellSize){
+        if(i % (5 * cellSize) === 0){
+            drawGrid.strokeStyle = "#204422"
+        }
+        if(i % (5 * cellSize) === (1 * cellSize)){
+            drawGrid.strokeStyle = "#113322";
+        }
+
         drawGrid.moveTo(i, 0);
 
         drawGrid.lineTo(i, canvasHeight);
+        
+        drawGrid.stroke();
+
+        drawGrid.beginPath();
     }
 
     for(i = 0; i <= canvasHeight; i += cellSize){
+        if(i % (5 * cellSize) === 0){
+            drawGrid.strokeStyle = "#204422"
+        }
+        if(i % (5 * cellSize) === (1 * cellSize)){
+            drawGrid.strokeStyle = "#113322";
+        }
+
         drawGrid.moveTo(0, i)
 
         drawGrid.lineTo(canvasWidth, i)
+
+        drawGrid.stroke();
+
+        drawGrid.beginPath();
     }
 
-    drawGrid.stroke();
 }
 
 renderGrid();
@@ -175,20 +235,19 @@ var rainbow = ["#ff0000","#ff8800","#ffff00","#00ff00","#0088ff","#ff00ff"]
 function renderBoard(){
     draw.clearRect(0,0,canvasWidth,canvasHeight)
 
-    for(i = 0; i < aliveCells.length; i++)
+    for(j = 0; j < aliveCells.length; j++)
     {   
-        var thisCell = aliveCells[i]
+        var thisCell = aliveCells[j]
 
         draw.fillStyle = rainbow[thisCell.y % rainbow.length]
 
-        if(thisCell.alive === true){
-            draw.fillRect(
-                (thisCell.x) * cellSize,
-                (thisCell.y) * cellSize,
-                cellSize,
-                cellSize
-            )
-        }
+        draw.fillRect(
+            (thisCell.x -xoffset) * cellSize,
+            (thisCell.y -yoffset) * cellSize,
+            cellSize,
+            cellSize
+        )
+    
         
     }
 }
@@ -206,8 +265,8 @@ canvasOverlay.addEventListener("click", function (evt) {
     if(!isPlaying){
         var mousePos = getMousePos(canvas, evt);
         
-        var selectx = Math.floor(mousePos.x/cellSize)
-        var selecty = Math.floor(mousePos.y/cellSize)
+        var selectx = Math.floor(mousePos.x/cellSize +xoffset)
+        var selecty = Math.floor(mousePos.y/cellSize +yoffset)
 
         var selectCell = cells[selectx][selecty]
 
@@ -251,17 +310,11 @@ $("#play-button").click(function(){
 //function for a new generation of cells
 function newGeneration(){
 
+    var currentMarked = markedCells.slice(0);
 
-    for(var k = 0; k < boardWidth; k++){
-        for(var l = 0; l < boardHeight; l++){
-            cells[k][l].check();
-        }
-    }
 
-    for(var k = 0; k < boardWidth; k++){
-        for(var l = 0; l < boardHeight; l++){
-            cells[k][l].update();
-        }
+    for(var j = 0; j < currentMarked.length; j++){
+        currentMarked[j].update();
     }
 
     renderBoard();
