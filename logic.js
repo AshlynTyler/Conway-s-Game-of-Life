@@ -102,9 +102,9 @@ var aliveCells = [];
 
 var markedCells = [];
 
-var boardWidth = 100;
+var boardWidth = 200;
 
-var boardHeight =100;
+var boardHeight =200;
 
 var xoffset = Math.floor(boardWidth /10)
 
@@ -136,11 +136,45 @@ var gameInterval;
 
 var isPlaying = false;
 
+var pixeloffx = 0;
+
+var pixeloffy = 0;
+
 draw.translate(.5,.5);
 
 drawGrid.translate(.5,.5);
 
 drawOverlay.translate(.5,.5);
+
+function pixelOffset(){
+    if(xoffset === 0 && pixeloffx > 0){
+        pixeloffx = 0
+    }
+    if(yoffset === 0 && pixeloffy > 0){
+        pixeloffy = 0
+    }
+    while(pixeloffx > 0){
+        pixeloffx -= cellSize
+        xoffset--
+    }
+    while(pixeloffy > 0){
+        pixeloffy -= cellSize
+        yoffset--
+    }
+
+    while(pixeloffx < -cellSize){
+        pixeloffx += cellSize
+        xoffset++
+    }
+    while(pixeloffy < -cellSize){
+        pixeloffy += cellSize
+        yoffset++
+    }
+}
+
+$("#zoom-input").val(cellSize)
+
+$("#speed-input").val(timePerGen)
 
 //creates or resets the cell board.
 function remakeBoard(){
@@ -169,6 +203,7 @@ remakeBoard();
 
 console.log(cells)
 
+
 function renderGrid(){
     drawGrid.clearRect(
         0,
@@ -182,34 +217,39 @@ function renderGrid(){
 
     drawGrid.beginPath();
 
-    for(i = 0; i <= canvasWidth; i += cellSize){
-        if(i % (5 * cellSize) === 0){
+    for(var i = 0 + pixeloffx; i <= canvasWidth && i <=(cellSize*(boardWidth-xoffset))+pixeloffx; i += cellSize){
+        if(((i-pixeloffx)+xoffset*cellSize) % (5 * cellSize) === 0){
             drawGrid.strokeStyle = "#204422"
         }
-        if(i % (5 * cellSize) === (1 * cellSize)){
+        if(((i-pixeloffx)+xoffset*cellSize) % (5 * cellSize) === (1 * cellSize)){
             drawGrid.strokeStyle = "#113322";
         }
-
         drawGrid.moveTo(i, 0);
-
-        drawGrid.lineTo(i, canvasHeight);
+        if(canvasHeight >= cellSize*(boardHeight-yoffset)+pixeloffy)
+            drawGrid.lineTo(i, cellSize*(boardHeight-yoffset)+pixeloffy)
+        else
+            drawGrid.lineTo(i, canvasHeight)
         
         drawGrid.stroke();
 
         drawGrid.beginPath();
     }
 
-    for(i = 0; i <= canvasHeight; i += cellSize){
-        if(i % (5 * cellSize) === 0){
+    for(var i = 0 + pixeloffy; i <= canvasHeight && i <=(cellSize*(boardHeight-yoffset))+pixeloffy; i += cellSize){
+        if(((i-pixeloffy)+yoffset*cellSize) % ((5 * cellSize)) === 0){
             drawGrid.strokeStyle = "#204422"
         }
-        if(i % (5 * cellSize) === (1 * cellSize)){
+        if(((i-pixeloffy)+yoffset*cellSize) % ((5 * cellSize)) === (1 * cellSize)){
             drawGrid.strokeStyle = "#113322";
         }
 
         drawGrid.moveTo(0, i)
 
-        drawGrid.lineTo(canvasWidth, i)
+        if(canvasWidth >= cellSize*(boardWidth-xoffset)+pixeloffx)
+            drawGrid.lineTo(cellSize*(boardWidth-xoffset)+pixeloffx, i)
+        else
+            drawGrid.lineTo(canvasWidth, i)
+        
 
         drawGrid.stroke();
 
@@ -225,6 +265,7 @@ function renderOverlay(){
     drawOverlay.strokeStyle = "#337722"
 
     drawOverlay.strokeRect(0,0,canvasWidth - 1,canvasHeight -1)
+
 }
 
 renderOverlay();
@@ -242,8 +283,8 @@ function renderBoard(){
         draw.fillStyle = rainbow[thisCell.y % rainbow.length]
 
         draw.fillRect(
-            (thisCell.x -xoffset) * cellSize,
-            (thisCell.y -yoffset) * cellSize,
+            (thisCell.x -xoffset) * cellSize + pixeloffx,
+            (thisCell.y -yoffset) * cellSize + pixeloffy,
             cellSize,
             cellSize
         )
@@ -262,11 +303,11 @@ function getMousePos(can, evt) {
 
 //click event for canvas to add and remove live cells.
 canvasOverlay.addEventListener("click", function (evt) {
-    if(!isPlaying){
+    if(!isPlaying && !evt.ctrlKey){
         var mousePos = getMousePos(canvas, evt);
         
-        var selectx = Math.floor(mousePos.x/cellSize +xoffset)
-        var selecty = Math.floor(mousePos.y/cellSize +yoffset)
+        var selectx = Math.floor((mousePos.x-pixeloffx)/cellSize +xoffset)
+        var selecty = Math.floor((mousePos.y-pixeloffy)/cellSize +yoffset)
 
         var selectCell = cells[selectx][selecty]
 
@@ -290,7 +331,7 @@ $("#play-button").click(function(){
 
         gameInterval = setInterval(function(){
             newGeneration();
-        },timePerGen)
+        },$("#speed-input").val())
 
         isPlaying = true;
     }
@@ -319,3 +360,63 @@ function newGeneration(){
 
     renderBoard();
 }
+
+$("#zoom-form").submit(function(event){
+    event.preventDefault();
+
+    var oldSize = cellSize;
+
+    cellSize = parseInt($("#zoom-input").val());
+
+    if(cellSize < 3){
+        cellSize = 3
+    }
+    xoffset -= Math.round((canvasWidth/(oldSize*2))*(oldSize / cellSize -1))
+
+    yoffset -= Math.round((canvasHeight/(oldSize*2))*(oldSize / cellSize -1))
+
+    if(xoffset < 0)
+        xoffset = 0
+    if(yoffset < 0)
+        yoffset = 0
+    renderGrid();
+
+    renderBoard();
+})
+
+window.addEventListener("wheel", function(e){
+    if(e.ctrlKey){
+        e.preventDefault();
+
+        absoY = e.deltaY / Math.abs(e.deltaY)
+
+        cellSize -= absoY
+
+        if(cellSize < 3){
+            cellSize = 3
+        }
+
+        $("#zoom-input").val(cellSize);
+
+        renderGrid();
+
+        renderBoard();
+    }
+})
+
+canvasOverlay.addEventListener("mousemove",(function(event){
+    
+
+    if(event.buttons % 2 === 1 && (isPlaying || event.ctrlKey))
+        {
+            pixeloffx += Math.round(event.movementX)
+
+            pixeloffy += Math.round(event.movementY)
+
+            pixelOffset();
+
+            renderGrid();
+
+            renderBoard();
+        }
+}))

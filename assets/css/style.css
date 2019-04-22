@@ -59,3 +59,63 @@ h1{
 
     cursor: pointer;
 }
+
+input{
+    border: 0;
+    border-radius: 10px;
+
+    color: #001122;
+
+    height: 20px;
+
+    width: 60px;
+
+    text-align: right;
+
+    padding-right: 10px;
+
+    padding-top: 1px;
+
+    padding-bottom: 0px;
+}
+
+.input-holder{
+    display: flex;
+
+    justify-content: space-around;
+
+    background: #662299;
+
+    padding: 3px;
+
+    border-radius: 13px;
+
+    height: 22px;
+
+    align-items: center;
+}
+
+.p-input{
+    
+    height: 20px;
+
+    margin: 0px;
+
+    margin-left: 5px;
+
+    margin-right: 5px;
+
+    font-size: 15px;
+
+    padding-top: 1px;
+}
+
+#button-holder{
+    align-items: center;
+
+    justify-content: space-between;
+}
+
+#speed-holder{
+    background: #cc8811
+}
