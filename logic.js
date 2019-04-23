@@ -147,10 +147,10 @@ drawGrid.translate(.5,.5);
 drawOverlay.translate(.5,.5);
 
 function pixelOffset(){
-    if(xoffset === 0 && pixeloffx > 0){
+    if(xoffset*cellSize < pixeloffx){
         pixeloffx = 0
     }
-    if(yoffset === 0 && pixeloffy > 0){
+    if(yoffset*cellSize < pixeloffy){
         pixeloffy = 0
     }
     while(pixeloffx > 0){
@@ -368,9 +368,16 @@ $("#zoom-form").submit(function(event){
 
     cellSize = parseInt($("#zoom-input").val());
 
+    if(Number.isNaN(cellSize)){
+        cellSize = oldSize
+    }
+
     if(cellSize < 3){
         cellSize = 3
     }
+
+    $("#zoom-input").val(cellSize)
+
     xoffset -= Math.round((canvasWidth/(oldSize*2))*(oldSize / cellSize -1))
 
     yoffset -= Math.round((canvasHeight/(oldSize*2))*(oldSize / cellSize -1))
