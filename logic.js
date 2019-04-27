@@ -15,6 +15,7 @@ function Cell(x,y){
 
     this.cellCount = 0;
 
+    //Finds all adjacent cells and adds them to the neighbors array.
     this.findNeighbors = function(){
         
         for(var i = -1; i < 2; i++){
@@ -84,7 +85,7 @@ function Cell(x,y){
         }
     }
 
-    //Checks to see if a cell is marked and then switches its state and unmarks it if it is.
+    //Revives or kills marked cells.
     this.update = function(){
             
             if(this.alive === true){
@@ -203,7 +204,7 @@ remakeBoard();
 
 console.log(cells)
 
-
+//renders the line grid and adds a brighter line every 5 squares.
 function renderGrid(){
     drawGrid.clearRect(
         0,
@@ -273,6 +274,7 @@ renderOverlay();
 //make colors for rainbow pattern.
 var rainbow = ["#ff0000","#ff8800","#ffff00","#00ff00","#0088ff","#ff00ff"]
 
+//ren
 function renderBoard(){
     draw.clearRect(0,0,canvasWidth,canvasHeight)
 
@@ -361,6 +363,7 @@ function newGeneration(){
     renderBoard();
 }
 
+//Adjust the zoom level when user enters a new value.
 $("#zoom-form").submit(function(event){
     event.preventDefault();
 
@@ -391,9 +394,12 @@ $("#zoom-form").submit(function(event){
     renderBoard();
 })
 
+//Zooms in or out when user holds control and uses the mouse wheel.
 window.addEventListener("wheel", function(e){
     if(e.ctrlKey){
         e.preventDefault();
+
+        let oldSize = cellSize;
 
         absoY = e.deltaY / Math.abs(e.deltaY)
 
@@ -404,6 +410,12 @@ window.addEventListener("wheel", function(e){
         }
 
         $("#zoom-input").val(cellSize);
+
+        pixeloffx += (oldSize/cellSize-1)*canvasWidth/2;
+
+        pixeloffy += (oldSize/cellSize-1)*canvasHeight/2;
+
+        pixelOffset();
 
         renderGrid();
 
