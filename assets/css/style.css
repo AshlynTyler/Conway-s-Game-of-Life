@@ -119,3 +119,27 @@ input{
 #speed-holder{
     background: #cc8811
 }
+
+#coordinates{
+    color: #aaffff;
+    position: absolute;
+    left: 0;
+    top: -28px;
+    font-size: 12px;
+}
+
+#controls1{
+    color: #aaffff;
+    position: absolute;
+    left:0;
+    bottom: -28px;
+    font-size: 12px;
+}
+
+#controls2{
+    color: #aaffff;
+    position: absolute;
+    right:0;
+    bottom: -28px;
+    font-size: 12px;
+}

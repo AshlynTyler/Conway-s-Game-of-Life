@@ -147,6 +147,7 @@ drawGrid.translate(.5,.5);
 
 drawOverlay.translate(.5,.5);
 
+//Converts pixel offset to cell offset.
 function pixelOffset(){
     if(xoffset*cellSize < pixeloffx){
         pixeloffx = 0
@@ -171,6 +172,8 @@ function pixelOffset(){
         pixeloffy += cellSize
         yoffset++
     }
+
+    $("#coordinates").text(`${xoffset},${yoffset}`)
 }
 
 $("#zoom-input").val(cellSize)
@@ -197,6 +200,12 @@ function remakeBoard(){
             cells[i][j].findNeighbors();
         }
     }
+
+    xoffset = Math.floor(boardWidth /10)
+
+    yoffset = Math.floor(boardHeight/10)
+
+    $("#coordinates").text(`${xoffset},${yoffset}`)
 
 }
 
@@ -274,7 +283,7 @@ renderOverlay();
 //make colors for rainbow pattern.
 var rainbow = ["#ff0000","#ff8800","#ffff00","#00ff00","#0088ff","#ff00ff"]
 
-//ren
+
 function renderBoard(){
     draw.clearRect(0,0,canvasWidth,canvasHeight)
 
@@ -392,9 +401,11 @@ $("#zoom-form").submit(function(event){
     renderGrid();
 
     renderBoard();
+
+    $("#coordinates").text(`${xoffset},${yoffset}`)
 })
 
-//Zooms in or out when user holds control and uses the mouse wheel.
+//Zooms the view in or out when user holds control and uses the mouse wheel.
 window.addEventListener("wheel", function(e){
     if(e.ctrlKey){
         e.preventDefault();
@@ -423,6 +434,7 @@ window.addEventListener("wheel", function(e){
     }
 })
 
+//Move the view on ctrl+leftclick and drag.
 canvasOverlay.addEventListener("mousemove",(function(event){
     
 
